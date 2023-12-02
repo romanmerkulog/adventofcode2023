@@ -25,15 +25,16 @@ func main() {
 	scanner := bufio.NewScanner(strings.NewReader(string(input)))
 	for scanner.Scan() {
 		game := GameParse(scanner.Text())
-		var totalRed int
-		var totalGreen int
-		var totalBlue int
+		var possible bool
 		for _, gameSet := range game.Sets {
-			totalRed = totalRed + gameSet.R
-			totalGreen = totalGreen + gameSet.G
-			totalBlue = totalBlue + gameSet.B
+			if gameSet.R <= 12 && gameSet.G <= 13 && gameSet.B <= 14 {
+				possible = true
+			} else {
+				possible = false
+				break
+			}
 		}
-		if totalRed <= 12 && totalGreen <= 13 && totalBlue <= 14 {
+		if possible {
 			gameNumbersSum = gameNumbersSum + game.Number
 		}
 	}
