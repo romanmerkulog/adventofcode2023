@@ -20,13 +20,24 @@ type Set struct {
 }
 
 func main() {
+	var gameNumbersSum int
 	input, _ := os.ReadFile("input")
 	scanner := bufio.NewScanner(strings.NewReader(string(input)))
 	for scanner.Scan() {
 		game := GameParse(scanner.Text())
-		fmt.Println(game)
+		var totalRed int
+		var totalGreen int
+		var totalBlue int
+		for _, gameSet := range game.Sets {
+			totalRed = totalRed + gameSet.R
+			totalGreen = totalGreen + gameSet.G
+			totalBlue = totalBlue + gameSet.B
+		}
+		if totalRed <= 12 && totalGreen <= 13 && totalBlue <= 14 {
+			gameNumbersSum = gameNumbersSum + game.Number
+		}
 	}
-
+	fmt.Printf("Game numbers sum is %d", gameNumbersSum)
 }
 
 func GameParse(input string) (game Game) {
@@ -50,6 +61,14 @@ func GameParse(input string) (game Game) {
 
 func SetParse(input string) (set Set) {
 	cutOne := strings.Split(input, ",")
-	fmt.Println(cutOne)
+	for _, cube := range cutOne {
+		if strings.Contains(cube, "red") {
+			set.R, _ = strconv.Atoi(strings.ReplaceAll(cube, "red", ""))
+		} else if strings.Contains(cube, "green") {
+			set.G, _ = strconv.Atoi(strings.ReplaceAll(cube, "green", ""))
+		} else if strings.Contains(cube, "blue") {
+			set.B, _ = strconv.Atoi(strings.ReplaceAll(cube, "blue", ""))
+		}
+	}
 	return set
 }
