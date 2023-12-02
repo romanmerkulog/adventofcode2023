@@ -25,18 +25,22 @@ func main() {
 	scanner := bufio.NewScanner(strings.NewReader(string(input)))
 	for scanner.Scan() {
 		game := GameParse(scanner.Text())
-		var possible bool
+		var maxRed int = 0
+		var maxGreen int = 0
+		var maxBlue int = 0
 		for _, gameSet := range game.Sets {
-			if gameSet.R <= 12 && gameSet.G <= 13 && gameSet.B <= 14 {
-				possible = true
-			} else {
-				possible = false
-				break
+			if gameSet.R > maxRed {
+				maxRed = gameSet.R
+			}
+			if gameSet.G > maxGreen {
+				maxGreen = gameSet.G
+			}
+			if gameSet.B > maxBlue {
+				maxBlue = gameSet.B
 			}
 		}
-		if possible {
-			gameNumbersSum = gameNumbersSum + game.Number
-		}
+		multiple := maxRed * maxGreen * maxBlue
+		gameNumbersSum = gameNumbersSum + multiple
 	}
 	fmt.Printf("Game numbers sum is %d", gameNumbersSum)
 }
