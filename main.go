@@ -4,76 +4,80 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 )
 
-type Game struct {
-	Number int
-	Sets   []Set
-}
-
-type Set struct {
-	R int
-	G int
-	B int
+type Numbers []struct {
+	Number     int
+	IndexStart int
+	IndexEnd   int
 }
 
 func main() {
 	var gameNumbersSum int
-	input, _ := os.ReadFile("input")
-	scanner := bufio.NewScanner(strings.NewReader(string(input)))
-	for scanner.Scan() {
-		game := GameParse(scanner.Text())
-		var maxRed int = 0
-		var maxGreen int = 0
-		var maxBlue int = 0
-		for _, gameSet := range game.Sets {
-			if gameSet.R > maxRed {
-				maxRed = gameSet.R
-			}
-			if gameSet.G > maxGreen {
-				maxGreen = gameSet.G
-			}
-			if gameSet.B > maxBlue {
-				maxBlue = gameSet.B
+	var rawStrings = GetInput()
+	for i := range rawStrings {
+		var allSymbols []int
+		if i > 0 {
+			allSymbols = append(allSymbols, ParseSymbol(rawStrings[i-1])...)
+		}
+		allSymbols = append(allSymbols, ParseSymbol(rawStrings[i])...)
+		if i < len(rawStrings)-1 {
+			allSymbols = append(allSymbols, ParseSymbol(rawStrings[i+1])...)
+		}
+
+		for _, number := range ParseNumber(rawStrings[i]) {
+			for _, symbol := range allSymbols {
+				if symbol >= number.IndexStart-1 && symbol <= number.IndexEnd+1 {
+					gameNumbersSum += number.Number
+					break
+				}
 			}
 		}
-		multiple := maxRed * maxGreen * maxBlue
-		gameNumbersSum = gameNumbersSum + multiple
 	}
 	fmt.Printf("Game numbers sum is %d", gameNumbersSum)
 }
 
-func GameParse(input string) (game Game) {
-	cutOne := strings.Split(input, ":")
-	game.Number, _ = strconv.Atoi(strings.Fields(cutOne[0])[1])
-	setsBody := strings.Split(strings.ReplaceAll(cutOne[1], " ", ""), ";")
-	for _, set := range setsBody {
-		setParsed := SetParse(set)
-		game.Sets = append(game.Sets, struct {
-			R int
-			G int
-			B int
-		}{
-			R: setParsed.R,
-			G: setParsed.G,
-			B: setParsed.B,
-		})
+func ParseNumber(input string) (result Numbers) {
+	re := regexp.MustCompile(`\d{1,}`)
+	numbers := re.FindAllString(input, -1)
+	for _, num := range numbers {
+		index := strings.Index(input, num)
+		number, _ := strconv.Atoi(num)
+		result = append(result, struct {
+			Number     int
+			IndexStart int
+			IndexEnd   int
+		}{Number: number, IndexStart: index, IndexEnd: index + len(num) - 1})
+		input = strings.Replace(input, num, DummyReplacer(len(num)), 1) // remove added number from line to avoid index duplicate
 	}
-	return game
+	return result
 }
 
-func SetParse(input string) (set Set) {
-	cutOne := strings.Split(input, ",")
-	for _, cube := range cutOne {
-		if strings.Contains(cube, "red") {
-			set.R, _ = strconv.Atoi(strings.ReplaceAll(cube, "red", ""))
-		} else if strings.Contains(cube, "green") {
-			set.G, _ = strconv.Atoi(strings.ReplaceAll(cube, "green", ""))
-		} else if strings.Contains(cube, "blue") {
-			set.B, _ = strconv.Atoi(strings.ReplaceAll(cube, "blue", ""))
+func ParseSymbol(input string) (result []int) {
+	for pos, char := range input {
+		isSymbol, _ := regexp.MatchString(`[^.\d\s]`, fmt.Sprintf("%c", char))
+		if isSymbol {
+			result = append(result, pos)
 		}
 	}
-	return set
+	return result
+}
+
+func DummyReplacer(len int) (result string) { // generate dummy string to replace tthe number
+	for i := 0; i < len; i++ {
+		result += "."
+	}
+	return result
+}
+
+func GetInput() (result []string) {
+	input, _ := os.ReadFile("input")
+	scanner := bufio.NewScanner(strings.NewReader(string(input)))
+	for scanner.Scan() {
+		result = append(result, scanner.Text())
+	}
+	return result
 }
