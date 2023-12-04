@@ -3,17 +3,30 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"math"
 	"os"
 	"strconv"
 	"strings"
 )
 
+type Cards []struct {
+	Number int
+	Count  int
+}
+
 func main() {
-	var gameNumbersSum float64
+	var gameNumbersSum int
 	var rawStrings = GetInput()
-	for _, string := range rawStrings {
+	var allCards Cards
+	for i := range rawStrings {
+		allCards = append(allCards, struct {
+			Number int
+			Count  int
+		}{Number: i + 1, Count: 1})
+	}
+	for i, string := range rawStrings {
 		var matches []int
+		rawNumber := strings.ReplaceAll(strings.Split(string, ":")[0], "Card ", "")
+		allCards[i].Number, _ = strconv.Atoi(strings.ReplaceAll(rawNumber, " ", ""))
 		rows := strings.Split(strings.Split(string, ":")[1], "|")
 		for _, winNumber := range ParseNumber(rows[0]) {
 			for _, yourNumber := range ParseNumber(rows[1]) {
@@ -23,10 +36,15 @@ func main() {
 			}
 		}
 		if len(matches) > 0 {
-			gameNumbersSum += math.Pow(2, float64(len(matches)-1))
+			for y := i + 1; y <= i+len(matches); y++ {
+				allCards[y].Count += allCards[i].Count
+			}
 		}
 	}
-	fmt.Printf("Game numbers sum is %s", strconv.FormatFloat(gameNumbersSum, 'f', -1, 64))
+	for _, card := range allCards {
+		gameNumbersSum += card.Count
+	}
+	fmt.Printf("Game numbers sum is %d", gameNumbersSum)
 }
 
 func ParseNumber(input string) (result []int) {
