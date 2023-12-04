@@ -3,72 +3,39 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"math"
 	"os"
-	"regexp"
 	"strconv"
 	"strings"
 )
 
-type Numbers []struct {
-	Number     int
-	IndexStart int
-	IndexEnd   int
-}
-
 func main() {
-	var gameNumbersSum int
+	var gameNumbersSum float64
 	var rawStrings = GetInput()
-	for i := range rawStrings {
-		var allSymbols []int
-		if i > 0 {
-			allSymbols = append(allSymbols, ParseSymbol(rawStrings[i-1])...)
-		}
-		allSymbols = append(allSymbols, ParseSymbol(rawStrings[i])...)
-		if i < len(rawStrings)-1 {
-			allSymbols = append(allSymbols, ParseSymbol(rawStrings[i+1])...)
-		}
-
-		for _, number := range ParseNumber(rawStrings[i]) {
-			for _, symbol := range allSymbols {
-				if symbol >= number.IndexStart-1 && symbol <= number.IndexEnd+1 {
-					gameNumbersSum += number.Number
-					break
+	for _, string := range rawStrings {
+		var matches []int
+		rows := strings.Split(strings.Split(string, ":")[1], "|")
+		for _, winNumber := range ParseNumber(rows[0]) {
+			for _, yourNumber := range ParseNumber(rows[1]) {
+				if winNumber == yourNumber {
+					matches = append(matches, winNumber)
 				}
 			}
 		}
-	}
-	fmt.Printf("Game numbers sum is %d", gameNumbersSum)
-}
-
-func ParseNumber(input string) (result Numbers) {
-	re := regexp.MustCompile(`\d{1,}`)
-	numbers := re.FindAllString(input, -1)
-	for _, num := range numbers {
-		index := strings.Index(input, num)
-		number, _ := strconv.Atoi(num)
-		result = append(result, struct {
-			Number     int
-			IndexStart int
-			IndexEnd   int
-		}{Number: number, IndexStart: index, IndexEnd: index + len(num) - 1})
-		input = strings.Replace(input, num, DummyReplacer(len(num)), 1) // remove added number from line to avoid index duplicate
-	}
-	return result
-}
-
-func ParseSymbol(input string) (result []int) {
-	for pos, char := range input {
-		isSymbol, _ := regexp.MatchString(`[^.\d\s]`, fmt.Sprintf("%c", char))
-		if isSymbol {
-			result = append(result, pos)
+		if len(matches) > 0 {
+			gameNumbersSum += math.Pow(2, float64(len(matches)-1))
 		}
 	}
-	return result
+	fmt.Printf("Game numbers sum is %s", strconv.FormatFloat(gameNumbersSum, 'f', -1, 64))
 }
 
-func DummyReplacer(len int) (result string) { // generate dummy string to replace tthe number
-	for i := 0; i < len; i++ {
-		result += "."
+func ParseNumber(input string) (result []int) {
+	for _, value := range strings.Split(input, " ") {
+		value = strings.ReplaceAll(value, " ", "")
+		number, err := strconv.Atoi(value)
+		if err == nil {
+			result = append(result, number)
+		}
 	}
 	return result
 }
