@@ -19,21 +19,18 @@ func main() {
 	var gameNumbersSum int
 	var rawStrings = GetInput()
 	for i := range rawStrings {
-		var allSymbols []int
-		if i > 0 {
-			allSymbols = append(allSymbols, ParseSymbol(rawStrings[i-1])...)
-		}
-		allSymbols = append(allSymbols, ParseSymbol(rawStrings[i])...)
-		if i < len(rawStrings)-1 {
-			allSymbols = append(allSymbols, ParseSymbol(rawStrings[i+1])...)
-		}
-
-		for _, number := range ParseNumber(rawStrings[i]) {
-			for _, symbol := range allSymbols {
-				if symbol >= number.IndexStart-1 && symbol <= number.IndexEnd+1 {
-					gameNumbersSum += number.Number
-					break
+		currentSymbols := ParseSymbol(rawStrings[i])
+		if len(currentSymbols) > 0 {
+			for _, symbol := range currentSymbols {
+				var ratio int
+				var IntersectionList Numbers
+				IntersectionList = append(IntersectionList, Intersect(rawStrings[i-1], symbol)...)
+				IntersectionList = append(IntersectionList, Intersect(rawStrings[i], symbol)...)
+				IntersectionList = append(IntersectionList, Intersect(rawStrings[i+1], symbol)...)
+				if len(IntersectionList) == 2 {
+					ratio = IntersectionList[0].Number * IntersectionList[1].Number
 				}
+				gameNumbersSum += ratio
 			}
 		}
 	}
@@ -56,9 +53,18 @@ func ParseNumber(input string) (result Numbers) {
 	return result
 }
 
+func Intersect(input string, symbol int) (result Numbers) {
+	for _, number := range ParseNumber(input) {
+		if symbol >= number.IndexStart-1 && symbol <= number.IndexEnd+1 {
+			result = append(result, number)
+		}
+	}
+	return result
+}
+
 func ParseSymbol(input string) (result []int) {
 	for pos, char := range input {
-		isSymbol, _ := regexp.MatchString(`[^.\d\s]`, fmt.Sprintf("%c", char))
+		isSymbol, _ := regexp.MatchString(`\*`, fmt.Sprintf("%c", char))
 		if isSymbol {
 			result = append(result, pos)
 		}
