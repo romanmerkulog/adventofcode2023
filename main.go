@@ -8,17 +8,6 @@ import (
 	"strings"
 )
 
-type Seed struct {
-	Seed       uint64
-	Soil       uint64
-	Fertilizer uint64
-	Water      uint64
-	Light      uint64
-	Temp       uint64
-	Humidity   uint64
-	Location   uint64
-}
-
 type ConvertMap []struct {
 	Source      uint64
 	Destination uint64
@@ -26,31 +15,17 @@ type ConvertMap []struct {
 }
 
 func main() {
-	var allRecipies []Seed
+	var location uint64
 	var seedsList, seed2soil, soil2Fertilizer, fertilizer2water, water2light, light2temp, temp2hum, hum2loc = GetInput()
-	for i, seed := range seedsList {
-		allRecipies = append(allRecipies, struct {
-			Seed       uint64
-			Soil       uint64
-			Fertilizer uint64
-			Water      uint64
-			Light      uint64
-			Temp       uint64
-			Humidity   uint64
-			Location   uint64
-		}{Seed: uintParse(seed)})
-		allRecipies[i].Soil = Convert(seed2soil, allRecipies[i].Seed)
-		allRecipies[i].Fertilizer = Convert(soil2Fertilizer, allRecipies[i].Soil)
-		allRecipies[i].Water = Convert(fertilizer2water, allRecipies[i].Fertilizer)
-		allRecipies[i].Light = Convert(water2light, allRecipies[i].Water)
-		allRecipies[i].Temp = Convert(light2temp, allRecipies[i].Light)
-		allRecipies[i].Humidity = Convert(temp2hum, allRecipies[i].Temp)
-		allRecipies[i].Location = Convert(hum2loc, allRecipies[i].Humidity)
-	}
-	var location = allRecipies[0].Location
-	for _, each := range allRecipies {
-		if each.Location < location {
-			location = each.Location
+	location = Convert(hum2loc, Convert(temp2hum, Convert(light2temp, Convert(water2light, Convert(fertilizer2water, Convert(soil2Fertilizer, Convert(seed2soil, uintParse(seedsList[0]))))))))
+	for i := 0; i < len(seedsList); i = i + 2 {
+		startItem := uintParse(seedsList[i])
+		length := uintParse(seedsList[i+1])
+		for y := startItem; y <= startItem+length; y++ {
+			currentLoc := Convert(hum2loc, Convert(temp2hum, Convert(light2temp, Convert(water2light, Convert(fertilizer2water, Convert(soil2Fertilizer, Convert(seed2soil, y)))))))
+			if currentLoc < location {
+				location = currentLoc
+			}
 		}
 	}
 	fmt.Println(location)
@@ -94,7 +69,7 @@ func MakeMap(input string) (result ConvertMap) {
 
 func Convert(input ConvertMap, value uint64) (result uint64) {
 	for _, row := range input {
-		if value >= row.Source && value <= row.Source+row.Length {
+		if value >= row.Source && value < row.Source+row.Length {
 			index := value - row.Source
 			result = row.Destination + index
 			return result
