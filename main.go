@@ -16,30 +16,40 @@ type Coordinates struct {
 func main() {
 	var turnsList, allCoords = GetInput()
 	var currentCoords Coordinates
+	var flag bool = true
+	var coordsList []Coordinates
+	var results []int
 	for _, coords := range allCoords {
-		if coords.Current == "AAA" {
-			currentCoords = coords
+		if strings.LastIndex(coords.Current, "A") == 2 {
+			coordsList = append(coordsList, coords)
 		}
 	}
 	var nextCoords Coordinates = currentCoords
 	var moveCounter int
-	for {
-		for _, turn := range turnsList {
-			currentCoords = nextCoords
-			nextCoords = GetNextCoord(turn, currentCoords, allCoords)
-			moveCounter++
-			if nextCoords.Current == "ZZZ" {
-				fmt.Println(moveCounter)
-				os.Exit(0)
+	for _, coord := range coordsList {
+		flag = true
+		moveCounter = 0
+		currentCoords = coord
+		nextCoords = coord
+		for flag {
+			for _, turn := range turnsList {
+				currentCoords = nextCoords
+				nextCoords = GetNextCoord(turn, currentCoords, allCoords)
+				if strings.LastIndex(currentCoords.Current, "Z") == 2 {
+					results = append(results, moveCounter)
+					flag = false
+				}
+				moveCounter++
 			}
 		}
 	}
+	fmt.Println(LCM(results[0], results[1], results[2], results[3], results[4], results[5]))
 }
 
 func GetInput() (turns []string, coords []Coordinates) {
 	input, _ := os.ReadFile("input")
 	scanner := bufio.NewScanner(strings.NewReader(string(input)))
-	var turnsList = ""
+	var turnsList = "LRLRLRLR"
 	for scanner.Scan() {
 		var currentString = scanner.Text()
 		if strings.Contains(currentString, "=") {
@@ -75,4 +85,23 @@ func GetNextCoord(turn string, position Coordinates, allCoords []Coordinates) (n
 		}
 	}
 	return nextCoord
+}
+
+func GCD(a, b int) int {
+	for b != 0 {
+		t := b
+		b = a % b
+		a = t
+	}
+	return a
+}
+
+func LCM(a, b int, integers ...int) int {
+	result := a * b / GCD(a, b)
+
+	for i := 0; i < len(integers); i++ {
+		result = LCM(result, integers[i])
+	}
+
+	return result
 }
