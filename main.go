@@ -29,9 +29,10 @@ func main() {
 			}
 		}
 		for i := len(temp) - 1; i > 0; i-- {
-			temp[i-1] = append(temp[i-1], temp[i-1][len(temp[i-1])-1]+temp[i][len(temp[i])-1])
+			firstElem := temp[i-1][0] - temp[i][0]
+			temp[i-1] = append([]int{firstElem}, temp[i-1]...)
 		}
-		totalSum += temp[0][len(temp[0])-1]
+		totalSum += temp[0][0]
 	}
 	fmt.Println(totalSum)
 }
