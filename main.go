@@ -4,104 +4,70 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 )
 
-type Coordinates struct {
-	Current string
-	Left    string
-	Right   string
-}
+type Array []int
 
 func main() {
-	var turnsList, allCoords = GetInput()
-	var currentCoords Coordinates
-	var flag bool = true
-	var coordsList []Coordinates
-	var results []int
-	for _, coords := range allCoords {
-		if strings.LastIndex(coords.Current, "A") == 2 {
-			coordsList = append(coordsList, coords)
-		}
-	}
-	var nextCoords Coordinates = currentCoords
-	var moveCounter int
-	for _, coord := range coordsList {
+	var input = GetInput()
+	var flag bool
+	var totalSum int
+	for _, val := range input {
+		var temp []Array
+		temp = append(temp, val)
+		nextDiff := val
 		flag = true
-		moveCounter = 0
-		currentCoords = coord
-		nextCoords = coord
 		for flag {
-			for _, turn := range turnsList {
-				currentCoords = nextCoords
-				nextCoords = GetNextCoord(turn, currentCoords, allCoords)
-				if strings.LastIndex(currentCoords.Current, "Z") == 2 {
-					results = append(results, moveCounter)
-					flag = false
-				}
-				moveCounter++
+			temp = append(temp, MakeDiff(nextDiff))
+			if isAllZero(MakeDiff(nextDiff)) {
+				flag = false
+			} else {
+				flag = true
+				nextDiff = MakeDiff(nextDiff)
 			}
 		}
+		for i := len(temp) - 1; i > 0; i-- {
+			temp[i-1] = append(temp[i-1], temp[i-1][len(temp[i-1])-1]+temp[i][len(temp[i])-1])
+		}
+		totalSum += temp[0][len(temp[0])-1]
 	}
-	fmt.Println(LCM(results[0], results[1], results[2], results[3], results[4], results[5]))
+	fmt.Println(totalSum)
 }
 
-func GetInput() (turns []string, coords []Coordinates) {
+func GetInput() (result []Array) {
 	input, _ := os.ReadFile("input")
 	scanner := bufio.NewScanner(strings.NewReader(string(input)))
-	var turnsList = "LRLRLRLR"
 	for scanner.Scan() {
-		var currentString = scanner.Text()
-		if strings.Contains(currentString, "=") {
-			currentString = strings.ReplaceAll(currentString, ",", "")
-			splitted := strings.Split(strings.ReplaceAll(strings.ReplaceAll(currentString, "(", ""), ")", ""), " ")
-			coords = append(coords, struct {
-				Current string
-				Left    string
-				Right   string
-			}{
-				Current: splitted[0],
-				Left:    splitted[2],
-				Right:   splitted[3]})
+		result = append(result, rowConvert(scanner.Text()))
+	}
+	return result
+}
 
+func rowConvert(input string) (result []int) {
+	var splitted = strings.Split(input, " ")
+	for _, val := range splitted {
+		num, _ := strconv.Atoi(val)
+		result = append(result, num)
+	}
+	return result
+}
+
+func isAllZero(input []int) (result bool) {
+	result = true
+	for _, val := range input {
+		if val != 0 {
+			result = false
 		}
 	}
-	for _, turn := range turnsList {
-		turns = append(turns, string(turn))
-	}
-	return turns, coords
+	return result
 }
 
-func GetNextCoord(turn string, position Coordinates, allCoords []Coordinates) (nextCoord Coordinates) {
-	var nextSpot string
-	if turn == "L" {
-		nextSpot = position.Left
-	} else {
-		nextSpot = position.Right
+func MakeDiff(input []int) (result []int) {
+	for i := 0; i < len(input)-1; i++ {
+		diff := input[i+1] - input[i]
+		result = append(result, diff)
 	}
-	for _, coords := range allCoords {
-		if nextSpot == coords.Current {
-			nextCoord = coords
-		}
-	}
-	return nextCoord
-}
-
-func GCD(a, b int) int {
-	for b != 0 {
-		t := b
-		b = a % b
-		a = t
-	}
-	return a
-}
-
-func LCM(a, b int, integers ...int) int {
-	result := a * b / GCD(a, b)
-
-	for i := 0; i < len(integers); i++ {
-		result = LCM(result, integers[i])
-	}
-
 	return result
 }
