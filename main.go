@@ -15,28 +15,49 @@ type Coords struct {
 	Col int
 }
 
+type Result []int
+
 func main() {
 	var input = GetInput()
 	var total int
 	var exitHandle = true
-	var prevCoords Coords = Coords{42, 8}
-	var currentPos Coords = Coords{42, 9}
-	var nextPos Coords = GetNextPoint(currentPos, prevCoords, input)
-	total = 1
+	var prevCoords Coords = Coords{0, 4}
+	var currentPos Coords = Coords{1, 4}
+	var nextPos = GetNextPoint(currentPos, prevCoords, input)
+	var resultsMap = [10][20]int{}
+	resultsMap[currentPos.Row][currentPos.Col] = 1
 	for exitHandle {
 		prevCoords = currentPos
 		currentPos = nextPos
+		resultsMap[currentPos.Row][currentPos.Col] = 1
 		nextPos = GetNextPoint(currentPos, prevCoords, input)
 		if nextPos.Row == -1 {
 			exitHandle = false
-			total++
-		} else {
-			prevCoords = currentPos
-			total++
+		} else if nextPos.Row == -2 {
+			log.Fatalln("error!")
 		}
 	}
 
-	fmt.Println(total / 2)
+	for i := 0; i < 9; i++ {
+		for y := 0; y < 11; y++ {
+			if resultsMap[i][y] == 0 {
+				resultsMap[i][y] = 2
+			} else {
+				break
+			}
+		}
+	}
+
+	for i := 0; i < len(resultsMap); i++ {
+		for y := 0; y < len(resultsMap); y++ {
+			if resultsMap[i][y] == 0 {
+				if Laser(i, y, resultsMap) {
+					total++
+				}
+			}
+		}
+	}
+	fmt.Println(total)
 }
 
 func GetInput() (result []Array) {
@@ -63,8 +84,23 @@ func NextCoord(input []int) (result []int) {
 	return result
 }
 
+func Laser(x int, y int, matrix [10][20]int) (result bool) {
+	var counter int
+	for i := x; i > 0; i-- {
+		if matrix[i][y] == 1 {
+			counter++
+		}
+	}
+
+	if counter != 0 && counter%2 > 0 {
+		result = true
+	} else {
+		result = false
+	}
+	return result
+}
+
 func GetNextPoint(current Coords, prevCoords Coords, input []Array) (next Coords) {
-	log.Println(input[current.Row][current.Col])
 	switch input[current.Row][current.Col] {
 	case "|":
 		next.Col = current.Col
@@ -113,8 +149,7 @@ func GetNextPoint(current Coords, prevCoords Coords, input []Array) (next Coords
 			next.Col = current.Col + 1
 		}
 	case ".":
-		next.Row = 0
-		next.Col = 0
+		next = Coords{-2, -2}
 	case "S":
 		next = Coords{-1, -1}
 	}
