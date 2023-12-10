@@ -3,38 +3,40 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"log"
 	"os"
-	"strconv"
 	"strings"
 )
 
-type Array []int
+type Array []string
+
+type Coords struct {
+	Row int
+	Col int
+}
 
 func main() {
 	var input = GetInput()
-	var flag bool
-	var totalSum int
-	for _, val := range input {
-		var temp []Array
-		temp = append(temp, val)
-		nextDiff := val
-		flag = true
-		for flag {
-			temp = append(temp, MakeDiff(nextDiff))
-			if isAllZero(MakeDiff(nextDiff)) {
-				flag = false
-			} else {
-				flag = true
-				nextDiff = MakeDiff(nextDiff)
-			}
+	var total int
+	var exitHandle = true
+	var prevCoords Coords = Coords{42, 8}
+	var currentPos Coords = Coords{42, 9}
+	var nextPos Coords = GetNextPoint(currentPos, prevCoords, input)
+	total = 1
+	for exitHandle {
+		prevCoords = currentPos
+		currentPos = nextPos
+		nextPos = GetNextPoint(currentPos, prevCoords, input)
+		if nextPos.Row == -1 {
+			exitHandle = false
+			total++
+		} else {
+			prevCoords = currentPos
+			total++
 		}
-		for i := len(temp) - 1; i > 0; i-- {
-			firstElem := temp[i-1][0] - temp[i][0]
-			temp[i-1] = append([]int{firstElem}, temp[i-1]...)
-		}
-		totalSum += temp[0][0]
 	}
-	fmt.Println(totalSum)
+
+	fmt.Println(total / 2)
 }
 
 func GetInput() (result []Array) {
@@ -46,29 +48,75 @@ func GetInput() (result []Array) {
 	return result
 }
 
-func rowConvert(input string) (result []int) {
-	var splitted = strings.Split(input, " ")
-	for _, val := range splitted {
-		num, _ := strconv.Atoi(val)
-		result = append(result, num)
-	}
-	return result
-}
-
-func isAllZero(input []int) (result bool) {
-	result = true
+func rowConvert(input string) (result []string) {
 	for _, val := range input {
-		if val != 0 {
-			result = false
-		}
+		result = append(result, string(val))
 	}
 	return result
 }
 
-func MakeDiff(input []int) (result []int) {
+func NextCoord(input []int) (result []int) {
 	for i := 0; i < len(input)-1; i++ {
 		diff := input[i+1] - input[i]
 		result = append(result, diff)
 	}
 	return result
+}
+
+func GetNextPoint(current Coords, prevCoords Coords, input []Array) (next Coords) {
+	log.Println(input[current.Row][current.Col])
+	switch input[current.Row][current.Col] {
+	case "|":
+		next.Col = current.Col
+		if current.Row > prevCoords.Row {
+			next.Row = current.Row + 1
+		} else {
+			next.Row = current.Row - 1
+		}
+	case "-":
+		next.Row = current.Row
+		if current.Col > prevCoords.Col {
+			next.Col = current.Col + 1
+		} else {
+			next.Col = current.Col - 1
+		}
+	case "L":
+		if current.Row == prevCoords.Row {
+			next.Row = current.Row - 1
+			next.Col = current.Col
+		} else if current.Col == prevCoords.Col {
+			next.Row = current.Row
+			next.Col = current.Col + 1
+		}
+	case "J":
+		if current.Col == prevCoords.Col {
+			next.Row = current.Row
+			next.Col = current.Col - 1
+		} else if current.Row == prevCoords.Row {
+			next.Row = current.Row - 1
+			next.Col = current.Col
+		}
+	case "7":
+		if current.Row == prevCoords.Row {
+			next.Row = current.Row + 1
+			next.Col = current.Col
+		} else if current.Col == prevCoords.Col {
+			next.Row = current.Row
+			next.Col = current.Col - 1
+		}
+	case "F":
+		if current.Row == prevCoords.Row {
+			next.Row = current.Row + 1
+			next.Col = current.Col
+		} else if current.Col == prevCoords.Col {
+			next.Row = current.Row
+			next.Col = current.Col + 1
+		}
+	case ".":
+		next.Row = 0
+		next.Col = 0
+	case "S":
+		next = Coords{-1, -1}
+	}
+	return next
 }
